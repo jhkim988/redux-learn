@@ -8,7 +8,7 @@ import counterReducer from "./counterSlice"; // features, 기능
  * configureStore 를 통해 여러 reducer 를 모두 전달할 수 있다.
  * { counter: counterReducer } 로 전달하는 것은 state.counter 를 담당하는 reducer 가 counterReducer 라는 의미이다.
  * 
- * 여러 플로그인(미들웨어, 인핸서)를 이 곳 configureStore 에서 설정할 수 있다.
+ * 여러 플러그인(미들웨어, 인핸서)를 이 곳 configureStore 에서 설정할 수 있다.
  */
 export default configureStore({
   reducer: {
