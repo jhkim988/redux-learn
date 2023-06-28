@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AddPostForm } from './redux_essentials/UsingReduxData/AddPostForm';
-import { SinglePostPage } from "./redux_essentials/UsingReduxData/SinglePostPage";
-import { PostsList } from './redux_essentials/UsingReduxData/PostsList';
-import { Navbar } from './redux_essentials/UsingReduxData/Navbar';
-import { EditPostForm } from './redux_essentials/UsingReduxData/EditPostForm';
+import { Navbar } from "./redux_essentials/UsingReduxData/Navbar";
+import { AddPostForm } from './redux_essentials/AsyncLogicAndDataFetching/AddPostForm';
+import { PostsList } from './redux_essentials/AsyncLogicAndDataFetching/PostsList';
+import { SinglePostPage } from './redux_essentials/AsyncLogicAndDataFetching/SinglePostPage';
+import { EditPostForm } from './redux_essentials/AsyncLogicAndDataFetching/EditPostForm';
 
 function App() {
   return (
