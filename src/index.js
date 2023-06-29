@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import store from "./redux_essentials/AsyncLogicAndDataFetching/store"
+import store from "./redux_essentials/PerformanceAndNormalizingData/store"
 import { Provider } from 'react-redux';
-import { fetchUsers } from './redux_essentials/AsyncLogicAndDataFetching/usersSlice';
-import { worker } from "./redux_essentials/AsyncLogicAndDataFetching/server";
+import { fetchUsers } from './redux_essentials/PerformanceAndNormalizingData/features/users/usersSlice';
+import { worker } from "./redux_essentials/PerformanceAndNormalizingData/server";
 
 async function main() {
   await worker.start({ onUnhandleRequest: 'bypass'});
