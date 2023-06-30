@@ -1,17 +1,16 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { addNewPost } from './postsSlice';
+import { useSelector } from 'react-redux';
 import { selectAllUsers } from '../users/usersSlice';
+import { useAddNewPostMutation } from '../api/apiSlice';
 
 export const AddPostForm = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [userId, setUserId] = useState('');
-  const [addRequestStatus, setAddRequestStatus] = useState('idle');
-  const dispatch = useDispatch();
+  const [addNewPost, { isLoading }] = useAddNewPostMutation();
 
   const users = useSelector(selectAllUsers);
-  const canSave = [title, content, userId].every(Boolean) && addRequestStatus === 'idle';
+  const canSave = [title, content, userId].every(Boolean) && !isLoading;
 
   const onTitleChanged = e => setTitle(e.target.value);
   const onContentChanged = e => setContent(e.target.value);
@@ -19,18 +18,12 @@ export const AddPostForm = () => {
   const onSavePostClicked = async () => {
     if (canSave) {
       try {
-        setAddRequestStatus('pending');
-
-        // createAsyncThunk 는 에러를 내부적으로 처리하지만, unwrap() 메서드를 통해 외부(현재 컴포넌트)에서 처리할 수 있다.
-        await dispatch(addNewPost({ title, content, user: userId })).unwrap(); 
-        
+        await addNewPost({ title, content, user: userId }).unwrap(); 
         setTitle('');
         setContent('');  
         setUserId('');
       } catch (err) {
         console.error(`Failed to save the post: ${err}`);
-      } finally {
-        setAddRequestStatus('idle');
       }
     }
   }

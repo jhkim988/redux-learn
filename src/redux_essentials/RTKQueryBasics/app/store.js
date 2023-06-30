@@ -5,7 +5,7 @@ import notificationsReducer from "../features/notifications/notificationsSlice";
 import { apiSlice } from "../features/api/apiSlice";
 
 export default configureStore({
-  reducers: {
+  reducer: {
     posts: postsReducer,
     users: usersReducer,
     notifications: notificationsReducer,

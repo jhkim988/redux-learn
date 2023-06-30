@@ -37,7 +37,7 @@ const notificationsSlice = createSlice({
   initialState,
   reducers: {
     allNotificationsRead(state, action) {
-      state.forEach(notification => {
+      Object.values(state.entities).forEach(notification => {
         notification.read = true;
       })
     },
