@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { Provider } from "react-redux";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import store from "./redux_essentials/RTKQueryBasics/app/store";
-import { Provider } from "react-redux";
-import { fetchUsers } from "./redux_essentials/RTKQueryBasics/features/users/usersSlice";
-import { worker } from "./redux_essentials/RTKQueryBasics/server";
+import store from "./redux_essentials/RTKQueryAdvancedPatterns/app/store";
+import { fetchUsers } from "./redux_essentials/RTKQueryAdvancedPatterns/features/users/usersSlice";
+import { worker } from "./redux_essentials/RTKQueryAdvancedPatterns/server";
 
 async function main() {
   await worker.start({ onUnhandleRequest: "bypass" });
