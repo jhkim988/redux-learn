@@ -5,12 +5,14 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import store from "./redux_essentials/RTKQueryAdvancedPatterns/app/store";
-import { fetchUsers } from "./redux_essentials/RTKQueryAdvancedPatterns/features/users/usersSlice";
 import { worker } from "./redux_essentials/RTKQueryAdvancedPatterns/server";
+// import { apiSlice } from "./redux_essentials/RTKQueryAdvancedPatterns/features/api/apiSlice";
+import { extendedApiSlice } from "./redux_essentials/RTKQueryAdvancedPatterns/features/users/usersSlice";
 
 async function main() {
   await worker.start({ onUnhandleRequest: "bypass" });
-  store.dispatch(fetchUsers());
+  // store.dispatch(apiSlice.endpoints.getUsers.initiate());
+  store.dispatch(extendedApiSlice.endpoints.getUsers.initiate());
 
   const root = ReactDOM.createRoot(document.getElementById("root"));
   root.render(

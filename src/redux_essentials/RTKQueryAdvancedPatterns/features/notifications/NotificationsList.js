@@ -1,13 +1,14 @@
 import { useLayoutEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { parseISO, formatDistanceToNow } from "date-fns";
-import { allNotificationsRead, selectAllNotifications } from "./notificationsSlice";
+import { allNotificationsRead, selectMetadataEntities, useGetNotificationsQuery } from "./notificationsSlice";
 import { selectAllUsers } from "../users/usersSlice";
 import classnames from "classnames";
 
 export const NotificationsList = () => {
   const dispatch = useDispatch();
-  const notifications = useSelector(selectAllNotifications);
+  const { data: notifications = []} = useGetNotificationsQuery();
+  const notificationsMetadata = useSelector(selectMetadataEntities);
   const users = useSelector(selectAllUsers);
 
   // useLayoutEffect 를 이용해 브라우저에 그리기 전에 실행하여 업데이트로 깜빡이지 않게 한다.
@@ -22,8 +23,9 @@ export const NotificationsList = () => {
       name: "Unknown User",
     };
 
+    const metadata = notificationsMetadata[notification.id]
     const notificationClassname = classnames('notification', {
-      new: notification.isNew
+      new: metadata.isNew
     });
 
     return (

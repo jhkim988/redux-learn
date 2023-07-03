@@ -1,7 +1,10 @@
+import { useMemo } from "react";
 import { useMatch, Link } from "react-router-dom"
-import { selectUserById } from "./usersSlice";
 import { useSelector } from "react-redux";
+import { createSelector } from "@reduxjs/toolkit";
+import { selectUserById } from "./usersSlice";
 import { selectAllPosts, selectPostsByUser } from "../posts/postsSlice";
+import { useGetPostsQuery } from "../api/apiSlice";
 
 export const UserPage = () => {
   const userId = useMatch("/users/:userId").params.userId;
@@ -15,7 +18,23 @@ export const UserPage = () => {
   // });
 
   // createSelector 를 이용하여 다시 렌더링되지 않게 한다.
-  const postsForUser = useSelector(selectPostsByUser);
+  // const postsForUser = useSelector(selectPostsByUser);
+
+  const selectPostsForUser = useMemo(() => {
+    const emptyArray = [];
+    return createSelector(
+      res => res.data,
+      (res, userId) => userId,
+      (data, userId) => data?.filter(post => post.user === userId) ?? emptyArray
+    )
+  }, []);
+
+  const { postsForUser } = useGetPostsQuery(undefined, {
+    selectFromResult: result => ({
+      ...result,
+      postsForUser: selectPostsForUser(result, userId)
+    })
+  });
 
   const postTitles = postsForUser.map(post => (
     <li key={post.id}>

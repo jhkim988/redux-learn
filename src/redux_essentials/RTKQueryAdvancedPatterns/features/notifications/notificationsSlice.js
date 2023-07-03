@@ -1,64 +1,99 @@
-import { createAsyncThunk, createEntityAdapter, createSlice } from "@reduxjs/toolkit";
+import { createAction, createAsyncThunk, createEntityAdapter, createSelector, createSlice, isAnyOf } from "@reduxjs/toolkit";
+import { forceGenerateNotifications } from "../../server"
 import { client } from "../../../AsyncLogicAndDataFetching/client";
+import { apiSlice } from "../api/apiSlice";
 
-const notificationsAdapter = createEntityAdapter({
-  sortComparer: (a, b) => b.date.localeCompare(a.date)
+const notificationsReceived = createAction('notifications/notificationsReceived');
+
+export const extendedApi = apiSlice.injectEndpoints({
+  endpoints: builder => ({
+    getNotifications: builder.query({
+      query: () => 'notifications',
+      async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch }) {
+        const ws = new WebSocket('ws://localhost');
+        try {
+          await cacheDataLoaded;
+          const listener = event => {
+            const message = JSON.parse(event.data);
+            switch (message.type) {
+              case 'notifications': {
+                updateCachedData(draft => {
+                  draft.push(...message.payload);
+                  draft.sort((a, b) => b.date.localeCompare(a.date));
+                });
+                dispatch(notificationsReceived(message.payload));
+                break;
+              } default: {
+                break;
+              }
+            }
+          }
+
+          ws.addEventListener('message', listener);
+        } catch {
+
+        }
+        await cacheEntryRemoved;
+        ws.close();
+      }
+    })
+  })
 });
 
-const initialState = notificationsAdapter.getInitialState();
+export const { useGetNotificationsQuery } = extendedApi;
 
-export const fetchNotifications = createAsyncThunk(
-  `notifications/fetchNotifications`,
-  
-  /**
-   * 첫 번째 인자: dispatch 를 호출할 때 한 개의 인자를 자유롭게 넘길 수 있다.
-   * 두 번째 인자: thunkAPI 객체
-   * - dispatch, getState 
-   * - extra: store를 만들 때 thunk middleware 에 전달할 수 있는 추가 인수
-   * - requestId: thunk 호출에 대한 unique id
-   * - signal: 진행 중인 요청을 취소하는 데 사용할 수 있는 AbortController.signal 함수
-   * - rejectWithValue: thunk가 error 를 받을 경우, rejected action 을 처리할 수 있는 util
-   * 
-   * createAsyncThunk 를 이용하지 않고 직접 thunk 를 만든다면 (dispatch, getState) 를 인자로 받게 된다.
-  */
-  async (_, { getState }) => {
-    const allNotifications = selectAllNotifications(getState());
-    const [latestNotification] = allNotifications;
-    const latestTimestamp = latestNotification ? latestNotification.data : "";
-    const response = await client.get(
-      `/fakeApi/notifications?since=${latestTimestamp}`
-    );
-    return response.data;
-  }
-);
+const notificationsAdapter = createEntityAdapter();
+
+const matchNotificationsReceived = isAnyOf(notificationsReceived, extendedApi.endpoints.getNotifications.matchFulfilled);
 
 const notificationsSlice = createSlice({
-  name: "notifications",
-  initialState,
+  name: 'notifications',
+  initialState: notificationsAdapter.getInitialState(),
   reducers: {
     allNotificationsRead(state, action) {
       Object.values(state.entities).forEach(notification => {
-        notification.read = true;
+        notification.read = true
       })
-    },
+    }
   },
   extraReducers(builder) {
-    builder.addCase(fetchNotifications.fulfilled, (state, action) => {
-      // state.push(...action.payload);
-      // state.forEach(notification => {
-      //   notification.isNew = !notification.read
-      // });
-      // state.sort((a, b) => b.date.localeCompare(a.date));
-      notificationsAdapter.upsertMany(state, action.payload);
+    builder.addMatcher(matchNotificationsReceived, (state, action) => {
+      // Add client-side metadata for tracking new notifications
+      const notificationsMetadata = action.payload.map(notification => ({
+        id: notification.id,
+        read: false,
+        isNew: true
+      }))
+
       Object.values(state.entities).forEach(notification => {
-        notification.isNew = !notification.read;
+        // Any notifications we've read are no longer new
+        notification.isNew = !notification.read
       })
-    });
-  },
-});
 
-export const { selectAll: selectAllNotifications } = notificationsAdapter.getSelectors(state => state.notifications);
+      notificationsAdapter.upsertMany(state, notificationsMetadata)
+    })
+  }
+})
 
-export const { allNotificationsRead } = notificationsSlice.actions;
 
-export default notificationsSlice.reducer;
+const emptyNotifications = [];
+
+export const selectNotificationsResult = extendedApi.endpoints.getNotifications.select();
+
+const selectNotificationsData = createSelector(selectNotificationsResult, notificationsResult => notificationsResult.data ?? emptyNotifications);
+
+export const fetchNotificationsWebsocket = () => (dispatch, getState) => {
+  const allNotifications = selectNotificationsData(getState());
+  const [latestNotification] = allNotifications;
+  const latestTimestamp = latestNotification?.date ?? '';
+  forceGenerateNotifications(latestTimestamp);
+}
+
+export const { allNotificationsRead } = notificationsSlice.actions
+
+export default notificationsSlice.reducer
+
+export const {
+  selectAll: selectNotificationsMetadata,
+  selectEntities: selectMetadataEntities
+} = notificationsAdapter.getSelectors(state => state.notifications)

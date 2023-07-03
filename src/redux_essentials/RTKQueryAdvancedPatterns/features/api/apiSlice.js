@@ -39,10 +39,31 @@ export const apiSlice = createApi({
       invalidatesTags: (result, error, arg) => [{ type: 'Post', id: arg.id }]
     }),
 
-    getUsers: builder.query({
-      query: () => `/users`
+    // getUsers: builder.query({
+    //   query: () => `/users`
+    // })
+
+    addReaction: builder.mutation({
+      query: ({ postId, reaction }) => ({
+        url: `posts/${postId}/reactions`,
+        method: 'POST',
+        body: { reaction },
+      }),
+      async onQueryStarted({ postId, reaction }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(apiSlice.util.updateQueryData('getPosts', undefined, draft => {
+          const post = draft.find(post => post.id === postId);
+          if (post) {
+            post.reactions[reaction]++;
+          }
+        }));
+        try {
+          await queryFulfilled
+        } catch {
+          patchResult.undo();
+        }
+      }
     })
   })
 });
 
-export const { useGetPostsQuery, useGetPostQuery, useAddNewPostMutation, useEditPostMutation, userGetUsersQuery } = apiSlice; // RTK Query 가 react hook 을 자동으로 생성한다.
+export const { useGetPostsQuery, useGetPostQuery, useAddNewPostMutation, useEditPostMutation, userGetUsersQuery, useAddReactionMutation } = apiSlice; // RTK Query 가 react hook 을 자동으로 생성한다.
